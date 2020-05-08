@@ -14,4 +14,5 @@ public class UserNormalLoginRequest {
     private String password;
 
     private Integer rememberMe;
+
 }

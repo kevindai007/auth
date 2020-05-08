@@ -3,6 +3,7 @@ package com.kevindai.auth.service;
 import com.kevindai.auth.domain.UserInfo;
 import com.kevindai.auth.domain.UserInfoExample;
 import com.kevindai.auth.mapper.UserInfoMapper;
+import com.kevindai.auth.security.captcha.CaptchaAuthenticationToken;
 import com.kevindai.auth.security.entity.LoginSecurityUser;
 import com.kevindai.auth.security.utils.JwtTokenUtil;
 import org.apache.commons.collections.CollectionUtils;
@@ -58,6 +59,13 @@ public class UserInfoService {
 
     public String login(String username, String password, Integer rememberMe) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        LoginSecurityUser userDetail = (LoginSecurityUser) authentication.getPrincipal();
+        return tokenPrefix + JwtTokenUtil.generateToken(userDetail, rememberMe != 0);
+    }
+
+    public String captchLogin(String username, Integer rememberMe) {
+        Authentication authentication = authenticationManager.authenticate(new CaptchaAuthenticationToken(username));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         LoginSecurityUser userDetail = (LoginSecurityUser) authentication.getPrincipal();
         return tokenPrefix + JwtTokenUtil.generateToken(userDetail, rememberMe != 0);

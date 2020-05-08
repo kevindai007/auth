@@ -1,5 +1,6 @@
 package com.kevindai.auth.security.config;
 
+import com.kevindai.auth.security.captcha.CaptchaAuthenticationSecurityConfig;
 import com.kevindai.auth.security.filter.JwtAuthenticationTokenFilter;
 import com.kevindai.auth.security.utils.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,11 +34,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Qualifier("userDetailsServiceImpl")
     private UserDetailsService userDetailsService;
 
-//    @Autowired
-//    private JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
+    @Autowired
+    private CaptchaAuthenticationSecurityConfig captchaAuthenticationSecurityConfig;
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
+
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -58,23 +60,37 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+//        http.cors().and().csrf().disable()
+//                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                .and().authorizeRequests()
+//                .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
+//                .antMatchers("/login/**").anonymous()
+//                .antMatchers("/swagger-resources/**", "/favicon.ico", "/v2/api-docs/**").anonymous()
+//                .antMatchers(HttpMethod.GET, "/*.html", "/**/*.html", "/**/*.css", "/**/*.js","/**/*.woff","/**/*.ttf")
+//                .permitAll()
+//                .antMatchers("/auth/**").anonymous()
+//                .antMatchers("/file/**")
+//                .permitAll()
+//                .anyRequest().authenticated()
+//                .and()
+//                .headers().frameOptions().disable()
+//        .and().addFilter(new JwtAuthenticationTokenFilter(authenticationManagerBean(),jwtTokenUtil));
+
         http.cors().and().csrf().disable()
+                .apply(captchaAuthenticationSecurityConfig).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().authorizeRequests()
-                .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
                 .antMatchers("/login/**").anonymous()
+                .antMatchers("/captcha/**").anonymous()
                 .antMatchers("/swagger-resources/**", "/favicon.ico", "/v2/api-docs/**").anonymous()
-                .antMatchers(HttpMethod.GET, "/*.html", "/**/*.html", "/**/*.css", "/**/*.js","/**/*.woff","/**/*.ttf")
-                .permitAll()
+                .antMatchers(HttpMethod.GET, "/*.html", "/**/*.html", "/**/*.css", "/**/*.js","/**/*.woff","/**/*.ttf").permitAll()
                 .antMatchers("/auth/**").anonymous()
-                .antMatchers("/file/**")
-                .permitAll()
+                .antMatchers("/file/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .headers().frameOptions().disable()
-        .and().addFilter(new JwtAuthenticationTokenFilter(authenticationManagerBean(),jwtTokenUtil));
+                .and().addFilterAfter(new JwtAuthenticationTokenFilter(authenticationManagerBean(),jwtTokenUtil), UsernamePasswordAuthenticationFilter.class);
 
-//        http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
 //
 //        http.exceptionHandling()
 //                .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
